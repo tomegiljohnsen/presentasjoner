@@ -369,9 +369,10 @@ html, body {
 }
 
 .lead-card-yager {
-  background: var(--ink); color: var(--bg);
+  background: #1C2A2E !important;
+  color: #F7F4EE !important;
   padding: 16px;
-  opacity:0; animation: cardIn 0.5s 0.5s ease forwards;
+  animation: cardIn 0.5s 0.5s ease both;
   position: relative;
 }
 .lead-card-yager::before {
@@ -380,17 +381,17 @@ html, body {
 }
 .lead-card-yager .ttl {
   font-size: 10px; font-weight:700;
-  letter-spacing: 0.25em; color: var(--gold);
+  letter-spacing: 0.25em; color: #B08A3E !important;
   margin-bottom: 12px;
 }
 .lead-row { margin-bottom: 12px; }
 .lead-row:last-child { margin-bottom: 0; }
-.lead-row .nm {
+.lead-card-yager .lead-row .nm {
   font-family: Georgia, serif; font-style: italic;
-  color: var(--bg); font-size: 18px;
+  color: #F7F4EE !important; font-size: 18px;
 }
-.lead-row .rl {
-  font-size: 11px; color: var(--accentLt); margin-top: 2px;
+.lead-card-yager .lead-row .rl {
+  font-size: 11px; color: #C9DDD6 !important; margin-top: 2px;
 }
 
 .bullets {
@@ -1138,7 +1139,7 @@ html, body {
       <li>Materiell på flere språk</li>
       <li>Driver Family Reunion, Free Enterprise Day, Dream Night</li>
     </ul>
-    <div class="lead-card">
+    <div class="lead-card-yager">
       <div class="ttl">LEDELSE I DAG</div>
       <div class="lead-row"><div class="nm">Jeff Yager</div><div class="rl">President</div></div>
       <div class="lead-row"><div class="nm">Doyle Yager</div><div class="rl">CEO, InterNET Services</div></div>
