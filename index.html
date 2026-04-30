@@ -1934,35 +1934,22 @@ stage.addEventListener('click', e => {
 });
 
 // Menu navigation
-function bindMenuButtons() {
-  document.querySelectorAll('.menu-card').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      const dest = btn.dataset.go;
-      if (dest === 'amway' || dest === 'yager') {
-        setSection(dest, 0);
-      }
-    });
-  });
-}
+// Global event delegation for all [data-go] elements
+// (works for both menu cards and links inside scenes, even after cloning)
+document.addEventListener('click', e => {
+  const target = e.target.closest('[data-go]');
+  if (!target) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const dest = target.dataset.go;
+  if (dest === 'menu' || dest === 'amway' || dest === 'yager') {
+    setSection(dest, 0);
+  }
+}, true);
 
-// Bind navigation links inside scenes (data-go attribute on links)
-function bindSceneLinks(scene) {
-  scene.querySelectorAll('[data-go]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      const dest = el.dataset.go;
-      if (dest === 'menu' || dest === 'amway' || dest === 'yager') {
-        setSection(dest, 0);
-      }
-    });
-  });
-}
+// Keep no-op for backward compat
+function bindSceneLinks(scene) {}
 
-bindMenuButtons();
-allScenes.forEach(bindSceneLinks);
 requestAnimationFrame(tick);
 </script>
 </body>
