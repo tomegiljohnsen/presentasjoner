@@ -227,14 +227,14 @@ h1 {
   <p class="lead">Animerte presentasjoner om Amway og Yager-systemet — historikk, prinsipper og menneskene som har formet en hel bransje. Klikk eller tap for å starte.</p>
 
   <div class="grid">
-    <a href="amway.html" class="card">
+    <a href="amway.html" class="card" id="link-amway">
       <div class="label">Selskapet</div>
       <h2>Amway</h2>
       <div class="desc">Stifterne, historien og verdiene bak verdens største direktesalgsselskap. 13 scener om Rich DeVos &amp; Jay Van Andel, FTC-dommen, de økologiske farmene og dagens ledelse.</div>
       <div class="arrow">Start presentasjon →</div>
     </a>
 
-    <a href="yager.html" class="card">
+    <a href="yager.html" class="card" id="link-yager">
       <div class="label">Systemet</div>
       <h2>Yager-systemet</h2>
       <div class="desc">Historikk, prinsipper og arven etter en familie. 12 scener om Dexter &amp; Birdie Yager, nivåene Amway måtte bygge for ham, hvorfor systemet fungerer, og videreføringen.</div>
@@ -246,6 +246,20 @@ h1 {
     Tilpasset både PC og mobil — riktig visning lastes automatisk.
   </div>
 </div>
+
+<script>
+  // Set direct links based on device, so we skip the router redirect
+  // (avoids extra navigation that triggers Safari's toolbars to reappear)
+  var isMobile = window.matchMedia('(max-width: 768px)').matches ||
+                 (('ontouchstart' in window) && window.innerWidth < 900);
+  if (isMobile) {
+    document.getElementById('link-amway').setAttribute('href', 'amway-mobil.html');
+    document.getElementById('link-yager').setAttribute('href', 'yager-mobil.html');
+  } else {
+    document.getElementById('link-amway').setAttribute('href', 'amway-historien.html');
+    document.getElementById('link-yager').setAttribute('href', 'yager-systemet.html');
+  }
+</script>
 
 </body>
 </html>
