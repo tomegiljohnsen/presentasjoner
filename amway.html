@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amway — laster...</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width: 100vw; height: 100vh;
+  background: #0E1A1D;
+  display: flex; align-items: center; justify-content: center;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid rgba(176,138,62,0.25);
+  border-top-color: #B08A3E;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.label {
+  position: absolute;
+  bottom: 24%;
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: #C9DDD6;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+</style>
+</head>
+<body>
+<div class="spinner"></div>
+<div class="label">Laster...</div>
+<script>
+  var isMobile = window.matchMedia('(max-width: 768px)').matches ||
+                 (('ontouchstart' in window) && window.innerWidth < 900);
+  var target = isMobile ? 'amway-mobil.html' : 'amway-historien.html';
+  target += window.location.search + window.location.hash;
+  window.location.replace(target);
+</script>
+</body>
+</html>

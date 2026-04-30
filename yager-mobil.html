@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E1A1D">
+<title>Yager-systemet</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:       #F7F4EE;
+  --ink:      #1C2A2E;
+  --inkSoft:  #445156;
+  --accent:   #0E6E5C;
+  --accentLt: #C9DDD6;
+  --gold:     #B08A3E;
+  --paper:    #FFFFFF;
+  --rule:     #D9D2C4;
+  --darkBg:   #0E1A1D;
+  --safeT:    env(safe-area-inset-top, 0px);
+  --safeB:    env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+  width:100vw; height:100vh;
+  height: 100dvh; /* dynamic viewport — handles browser chrome */
+  overflow:hidden;
+  font-family: -apple-system, 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-user-select:none;
+  user-select:none;
+  touch-action: pan-y;
+  overscroll-behavior: none;
+}
+
+.serif { font-family: Georgia, 'Times New Roman', serif; }
+
+/* BG */
+#bg {
+  position:fixed; inset:0; z-index:0;
+  background: linear-gradient(135deg, #F7F4EE 0%, #F0EAD8 50%, #F7F4EE 100%);
+  background-size: 300% 300%;
+  animation: bgShift 24s ease infinite;
+}
+@keyframes bgShift {
+  0%,100% { background-position: 0% 50%; }
+  50%     { background-position: 100% 50%; }
+}
+#bg::after {
+  content:''; position:absolute; inset:0;
+  background: repeating-linear-gradient(
+    -52deg, transparent, transparent 50px,
+    rgba(176,138,62,0.04) 50px, rgba(176,138,62,0.04) 52px
+  );
+}
+
+/* Top bar + progress */
+#topbar {
+  position:fixed; top:0; left:0; right:0;
+  height: calc(3px + var(--safeT));
+  padding-top: var(--safeT);
+  z-index:100;
+  background: linear-gradient(to right, var(--gold), #d4a85c, var(--gold));
+}
+#progress-wrap {
+  position:fixed;
+  top: calc(3px + var(--safeT));
+  left:0; right:0; height:2px; z-index:100;
+  background: rgba(28,42,46,0.06);
+}
+#progress-bar {
+  height:100%; background: rgba(176,138,62,0.55);
+  transition: width 0.15s linear;
+}
+
+/* Stage: scrollable per-scene */
+#stage {
+  position:fixed; inset:0; z-index:10;
+  padding-top: calc(20px + var(--safeT));
+  padding-bottom: calc(80px + var(--safeB));
+}
+
+.scene {
+  position:absolute;
+  top: calc(20px + var(--safeT));
+  bottom: calc(80px + var(--safeB));
+  left: 0; right: 0;
+  padding: 16px 20px 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.4s ease;
+}
+.scene.active { opacity:1; pointer-events:all; }
+.scene.dark { background: var(--darkBg); }
+
+.scene-inner {
+  display:flex; flex-direction:column;
+  gap: 18px;
+  min-height: 100%;
+}
+
+/* Eyebrow */
+.eyebrow-row { display:flex; flex-direction:column; gap:6px; }
+.eyebrow-bar {
+  width: 28px; height: 3px;
+  background: var(--gold);
+  opacity: 0;
+  animation: barIn 0.5s 0.1s ease forwards;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: textIn 0.5s 0.2s ease forwards;
+}
+@keyframes barIn {
+  from { opacity:0; transform: scaleX(0); transform-origin:left; }
+  to   { opacity:1; transform: scaleX(1); }
+}
+@keyframes textIn {
+  from { opacity:0; transform: translateY(6px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* Titles */
+.title-xl {
+  font-size: 56px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 0.95;
+  color: var(--bg);
+  opacity:0;
+  animation: scaleIn 0.7s 0.2s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.title-l {
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+  opacity:0;
+  animation: titleIn 0.6s 0.3s ease forwards;
+}
+@keyframes scaleIn {
+  from { opacity:0; transform: scale(0.94); }
+  to   { opacity:1; transform: scale(1); }
+}
+@keyframes titleIn {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.subtitle {
+  font-size: 17px;
+  color: var(--accent);
+  font-style: italic;
+  line-height: 1.4;
+  opacity:0;
+  animation: textIn 0.6s 0.5s ease forwards;
+}
+.scene.dark .subtitle { color: var(--accentLt); }
+
+.byline {
+  font-size: 13px;
+  color: var(--inkSoft);
+  font-style: italic;
+  opacity: 0;
+  animation: textIn 0.6s 0.8s ease forwards;
+  line-height: 1.5;
+}
+.scene.dark .byline { color: #8FA09D; }
+
+.body {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  opacity:0;
+  animation: textIn 0.6s 0.4s ease forwards;
+}
+.body.soft { color: var(--inkSoft); }
+.body.italic { font-style: italic; }
+.body.lead { font-size: 17px; font-style: italic; }
+
+.divider {
+  width: 60px; height: 1px;
+  background: var(--gold);
+  margin: 4px 0;
+  opacity:0;
+  animation: textIn 0.4s 0.7s ease forwards;
+}
+
+/* Cards stacked */
+.cards { display:flex; flex-direction:column; gap: 12px; }
+
+.card {
+  background: var(--paper);
+  padding: 14px 16px;
+  border: 0.5px solid var(--rule);
+  position:relative;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: cardIn 0.5s ease forwards;
+}
+.card.gold-strip::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width: 4px; background: var(--gold);
+}
+.card.accent-top::before {
+  content:''; position:absolute; left:0; right:0; top:0;
+  height: 3px; background: var(--accent);
+}
+.card .head {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.card .desc {
+  font-size: 13px;
+  color: var(--inkSoft);
+  line-height: 1.55;
+}
+.card .yr {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+@keyframes cardIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.cards > .card:nth-child(1) { animation-delay: 0.3s; }
+.cards > .card:nth-child(2) { animation-delay: 0.4s; }
+.cards > .card:nth-child(3) { animation-delay: 0.5s; }
+.cards > .card:nth-child(4) { animation-delay: 0.6s; }
+.cards > .card:nth-child(5) { animation-delay: 0.7s; }
+.cards > .card:nth-child(6) { animation-delay: 0.8s; }
+.cards > .card:nth-child(7) { animation-delay: 0.9s; }
+
+/* Stats — 2x2 on mobile */
+.stats {
+  display:grid; grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.stat {
+  background: var(--paper);
+  border: 0.5px solid var(--rule);
+  padding: 14px 8px;
+  text-align:center;
+  opacity:0;
+  animation: cardIn 0.5s 0.4s ease forwards;
+}
+.stat:nth-child(2) { animation-delay: 0.5s; }
+.stat:nth-child(3) { animation-delay: 0.6s; }
+.stat:nth-child(4) { animation-delay: 0.7s; }
+.stat .big {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--accent);
+  font-size: 32px;
+  line-height: 1;
+}
+.stat .lbl {
+  font-size: 11px;
+  color: var(--inkSoft);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* Bio cards */
+.bio-card {
+  background: var(--paper);
+  position:relative;
+  box-shadow: 0 2px 10px rgba(28,42,46,0.06);
+  opacity:0;
+  animation: cardIn 0.5s ease forwards;
+}
+.bio-card .top {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 14px;
+}
+.bio-card .name {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 19px;
+  margin-bottom: 2px;
+}
+.bio-card .role {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.bio-card .body-txt {
+  padding: 12px 14px 8px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+.bio-card .quote {
+  margin: 0 14px 12px;
+  padding: 6px 0 6px 10px;
+  border-left: 2px solid var(--accentLt);
+  font-style: italic;
+  font-family: Georgia, serif;
+  color: var(--accent);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.cards > .bio-card:nth-child(1) { animation-delay: 0.3s; }
+.cards > .bio-card:nth-child(2) { animation-delay: 0.45s; }
+.cards > .bio-card:nth-child(3) { animation-delay: 0.6s; }
+
+/* Vertical timeline (mobile) */
+.v-timeline {
+  position:relative;
+  padding-left: 24px;
+  display:flex; flex-direction:column;
+  gap: 14px;
+}
+.v-timeline::before {
+  content:''; position:absolute;
+  left: 7px; top: 6px; bottom: 6px;
+  width: 1.5px;
+  background: var(--rule);
+  transform: scaleY(0);
+  transform-origin: top;
+  animation: lineV 1s 0.3s ease forwards;
+}
+@keyframes lineV { to { transform: scaleY(1); } }
+
+.tl-item {
+  position:relative;
+  opacity:0;
+  animation: textIn 0.5s ease forwards;
+}
+.tl-item::before {
+  content:'';
+  position:absolute;
+  left: -24px; top: 4px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2.5px solid var(--bg);
+  box-shadow: 0 1px 4px rgba(14,110,92,0.3);
+}
+.tl-item:nth-child(1) { animation-delay: 0.5s; }
+.tl-item:nth-child(2) { animation-delay: 0.65s; }
+.tl-item:nth-child(3) { animation-delay: 0.8s; }
+.tl-item:nth-child(4) { animation-delay: 0.95s; }
+.tl-item:nth-child(5) { animation-delay: 1.1s; }
+.tl-item:nth-child(6) { animation-delay: 1.25s; }
+.tl-item:nth-child(7) { animation-delay: 1.4s; }
+.tl-item:nth-child(8) { animation-delay: 1.55s; }
+
+.tl-item .yr {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+.tl-item .lbl {
+  font-size: 13px;
+  color: var(--inkSoft);
+  line-height: 1.4;
+}
+
+.callout {
+  background: var(--accentLt);
+  padding: 12px 14px;
+  margin-top: 10px;
+  opacity:0;
+  animation: textIn 0.6s 1.7s ease forwards;
+}
+.callout .ttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.callout .txt {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* Pin levels stack */
+.pin-panel {
+  background: var(--paper);
+  border: 0.5px solid var(--rule);
+  padding: 14px;
+  opacity:0;
+  animation: cardIn 0.5s 0.3s ease forwards;
+}
+.pin-panel.dark {
+  background: var(--ink);
+  color: var(--bg);
+  position:relative;
+  animation-delay: 0.45s;
+}
+.pin-panel.dark::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width: 4px; background: var(--gold);
+}
+.pin-panel .ttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.pin-row {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 13px;
+}
+.pin-row .yr {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+}
+.pin-row .lbl { color: var(--ink); }
+.pin-panel.dark .pin-row .lbl { color: var(--bg); }
+.pin-panel .sub {
+  font-size: 10px;
+  color: var(--inkSoft);
+  font-style: italic;
+  margin-top: 1px;
+}
+.pin-panel.dark .sub { color: var(--accentLt); }
+
+/* Pillar card */
+.pillar-card {
+  background: var(--paper);
+  border: 0.5px solid var(--rule);
+  border-left: 4px solid var(--gold);
+  padding: 12px 14px;
+  position:relative;
+  opacity:0;
+  transform: translateX(-10px);
+  animation: cardSlideIn 0.5s ease forwards;
+}
+.cards > .pillar-card:nth-child(1) { animation-delay: 0.3s; }
+.cards > .pillar-card:nth-child(2) { animation-delay: 0.45s; }
+.cards > .pillar-card:nth-child(3) { animation-delay: 0.6s; }
+.cards > .pillar-card:nth-child(4) { animation-delay: 0.75s; }
+@keyframes cardSlideIn {
+  to { opacity:1; transform: translateX(0); }
+}
+.pillar-card .num-r {
+  position:absolute; right: 12px; top: 8px;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 28px;
+  color: var(--accentLt);
+  line-height: 1;
+}
+.pillar-card .pttl {
+  font-family: Georgia, serif;
+  font-size: 19px;
+  color: var(--ink);
+  margin-bottom: 6px;
+  padding-right: 36px;
+}
+.pillar-card .pdesc {
+  font-size: 13px;
+  color: var(--inkSoft);
+  line-height: 1.5;
+}
+
+/* Feature quote */
+.feature {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 18px;
+  position: relative;
+  opacity:0;
+  animation: cardIn 0.6s 0.4s ease forwards;
+}
+.feature .bigQ {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--bg);
+}
+.feature .qSrc {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* Leadership card (used for InterNET ledelse) */
+.lead-card {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 16px;
+  opacity:0;
+  animation: cardIn 0.5s 0.5s ease forwards;
+  position: relative;
+}
+.lead-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width: 3px; background: var(--gold);
+}
+.lead-card .ttl {
+  font-size: 10px;
+  font-weight:700;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.lead-row { margin-bottom: 12px; }
+.lead-row:last-child { margin-bottom: 0; }
+.lead-row .nm {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--bg);
+  font-size: 18px;
+}
+.lead-row .rl {
+  font-size: 11px;
+  color: var(--accentLt);
+  margin-top: 2px;
+}
+
+/* Bullets list */
+.bullets {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.7;
+  padding-left: 20px;
+  opacity:0;
+  animation: textIn 0.6s 0.6s ease forwards;
+}
+.bullets li { margin-bottom: 4px; }
+
+/* Closing scene */
+.close-title {
+  font-size: 36px;
+  line-height: 1.05;
+  color: var(--bg);
+  font-style: italic;
+  opacity:0;
+  animation: titleIn 0.8s 0.4s ease forwards;
+}
+.close-footer {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 12px;
+  color: var(--accentLt);
+}
+.close-footer .nm {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--bg);
+  font-size: 16px;
+}
+
+/* ── CONTROLS (bottom dock) ── */
+#controls {
+  position: fixed;
+  bottom: calc(16px + var(--safeB));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px;
+  background: rgba(28,42,46,0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 999px;
+  color: white;
+  font-size: 11px;
+  max-width: calc(100vw - 32px);
+}
+#playPause {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  cursor: pointer;
+  color: #1C2A2E;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+#playPause:active { transform: scale(0.94); }
+#dots {
+  display:flex; gap: 4px;
+  padding: 0 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#dots::-webkit-scrollbar { display: none; }
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  cursor:pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.dot.active { background: var(--gold); width: 18px; border-radius: 4px; }
+#counter {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Swipe hint */
+#swipeHint {
+  position: fixed;
+  top: calc(20px + var(--safeT));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  font-size: 10px;
+  color: var(--inkSoft);
+  background: rgba(247,244,238,0.85);
+  padding: 5px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  white-space: nowrap;
+  opacity: 0;
+  animation: hintFade 4s 0.5s ease forwards;
+  pointer-events: none;
+}
+@keyframes hintFade {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Avoid iOS zoom on doubletap */
+* { touch-action: manipulation; }
+
+/* Larger phones / smaller tablets */
+@media (min-width: 500px) {
+  .title-xl { font-size: 72px; }
+  .title-l  { font-size: 36px; }
+  .body, .body.lead { font-size: 17px; }
+  .stats { grid-template-columns: repeat(4, 1fr); }
+  .scene { padding: 24px 30px 30px; }
+}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="topbar"></div>
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+<div id="swipeHint">Sveip eller tap for å gå videre</div>
+
+<div id="stage">
+
+<!-- ════ 1: TITLE ════ -->
+<section class="scene dark active" data-dur="6">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">EN PRESENTASJON</div>
+    </div>
+    <h1 class="serif title-xl">Yager-systemet</h1>
+    <div class="subtitle">Historikk, prinsipper og arven etter en familie</div>
+    <div class="divider"></div>
+    <div class="byline">Bygget av Dexter & Birdie Yager fra 1964 — videreført av Jeff, Doyle og Steve Yager</div>
+  </div>
+</section>
+
+<!-- ════ 2: WHO ════ -->
+<section class="scene" data-dur="9">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Familien</div>
+    </div>
+    <h2 class="serif title-l">Dexter & Birdie Yager</h2>
+    <div class="body lead soft">
+      Dexter R. Yager Sr. (1939–2019) ble av mange kalt "The Father of Modern MLM". Sammen med kona Birdie bygde han — fra Rome, NY og senere Charlotte, NC — den største organisasjonen i Amways historie.
+    </div>
+    <div class="cards">
+      <div class="card gold-strip">
+        <div class="head">Bakgrunn</div>
+        <div class="desc">Selger hos Sears, Ford og Utica Club Beer · oppvokst i Rome, NY</div>
+      </div>
+      <div class="card gold-strip">
+        <div class="head">Inn i Amway</div>
+        <div class="desc">1964 — pitchet av en slektning i Rome, NY</div>
+      </div>
+      <div class="card gold-strip">
+        <div class="head">Anerkjennelse</div>
+        <div class="desc">Founders Crown Ambassador 65 FAA — første i verden på 60 FAA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 3: TIMELINE ════ -->
+<section class="scene" data-dur="14">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Tidslinje</div>
+    </div>
+    <h2 class="serif title-l">Fra Rome, NY til 40+ land</h2>
+    <div class="v-timeline">
+      <div class="tl-item"><div class="yr">1964</div><div class="lbl">Distributør i Amway</div></div>
+      <div class="tl-item"><div class="yr">1969</div><div class="lbl">Flytter til Charlotte, NC</div></div>
+      <div class="tl-item"><div class="yr">1970</div><div class="lbl">Diamond — frigjør seg fra jobb</div></div>
+      <div class="tl-item"><div class="yr">1979</div><div class="lbl">Crown</div></div>
+      <div class="tl-item"><div class="yr">1985</div><div class="lbl">Crown Ambassador</div></div>
+      <div class="tl-item"><div class="yr">2006</div><div class="lbl">Founders Crown Ambassador 60 FAA</div></div>
+      <div class="tl-item"><div class="yr">2019</div><div class="lbl">Dexter går bort 7. januar</div></div>
+      <div class="tl-item"><div class="yr">2025</div><div class="lbl">Direct Selling Hall of Fame (postumt)</div></div>
+    </div>
+    <div class="callout">
+      <div class="ttl">I DAG</div>
+      <div class="txt">Organisasjonen strekker seg over 40+ land · InterNET Services har kontorer i ca. 20 land · Yager-organisasjonen omsetter for milliardbeløp.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 4: PIN LEVELS ════ -->
+<section class="scene" data-dur="14">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Anerkjennelse</div>
+    </div>
+    <h2 class="serif title-l">Nivåene Amway måtte bygge</h2>
+    <div class="body soft italic">
+      Dexter klatret raskere enn Amways anerkjennelses­system var bygget for. Da han nådde toppen, måtte selskapet legge til nye nivåer.
+    </div>
+    <div class="pin-panel">
+      <div class="ttl">DEXTERS PIN-NIVÅER</div>
+      <div class="pin-row"><div class="yr">1964</div><div class="lbl">Silver Producer</div></div>
+      <div class="pin-row"><div class="yr">~1965</div><div class="lbl">Diamond</div></div>
+      <div class="pin-row"><div class="yr">1970</div><div class="lbl">Double Diamond</div></div>
+      <div class="pin-row"><div class="yr">1979</div><div class="lbl">Crown</div></div>
+      <div class="pin-row"><div class="yr">1985</div><div class="lbl">Crown Ambassador</div></div>
+      <div class="pin-row"><div class="yr">1997</div><div class="lbl">FDSA — 40 FAA</div></div>
+    </div>
+    <div class="pin-panel dark">
+      <div class="ttl">NIVÅER OPPRETTET FOR Å HOLDE TRITT</div>
+      <div class="pin-row"><div class="yr">1998</div><div><div class="lbl">45 FAA Credits</div><div class="sub">Lagt til etter Dexter & Birdie nådde nivået</div></div></div>
+      <div class="pin-row"><div class="yr">1999</div><div><div class="lbl">50 FAA Credits</div><div class="sub">Yager og Nakajima passerte taket</div></div></div>
+      <div class="pin-row"><div class="yr">2002</div><div><div class="lbl">Founders Crown Ambassador (55 FAA)</div><div class="sub">Etablert globalt</div></div></div>
+      <div class="pin-row"><div class="yr">2006</div><div><div class="lbl">60 FAA Credits</div><div class="sub">Yagers først i verden</div></div></div>
+      <div class="pin-row"><div class="yr">2011</div><div><div class="lbl">65 FAA Credits</div><div class="sub">Den høyeste anerkjennelsen i Amways historie</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 5: WHAT IS YAGER SYSTEM ════ -->
+<section class="scene" data-dur="10">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Definisjon</div>
+    </div>
+    <h2 class="serif title-l">Hva er «Yager-systemet»?</h2>
+    <div class="body lead">
+      Et opplærings- og duplikasjonssystem
+    </div>
+    <div class="body">
+      Yager-systemet er ikke et selskap — det er et strukturert system av bøker, lyd, video, samlinger og mentorskap som gjør at Amway-forretninger bygges og dupliseres på samme måte uavhengig av hvor i verden distributøren er.
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big">60+</div><div class="lbl">år siden<br>start i 1964</div></div>
+      <div class="stat"><div class="big">40+</div><div class="lbl">land med IBOer<br>i organisasjonen</div></div>
+      <div class="stat"><div class="big">1M+</div><div class="lbl">personer i<br>organisasjonen</div></div>
+      <div class="stat"><div class="big">12+</div><div class="lbl">bøker av<br>Dexter</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 6: WHY IT WORKS FOR ABOs ════ -->
+<section class="scene" data-dur="14">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Suksessen i tall</div>
+    </div>
+    <h2 class="serif title-l">Hvorfor det fungerer for ABOer</h2>
+    <div class="body soft italic">
+      Yager-systemet er den mest beviste oppskriften i hele direktesalgshistorien. Ingen annen organisasjon har produsert flere ledere, mer omsetning eller flere generasjoner av suksess.
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big">$2,6 mrd</div><div class="lbl">årlig omsetning<br>via downline</div></div>
+      <div class="stat"><div class="big">1 000+</div><div class="lbl">Diamonds<br>i downline historisk</div></div>
+      <div class="stat"><div class="big">40+</div><div class="lbl">land med<br>aktive ABOer</div></div>
+      <div class="stat"><div class="big">4. gen.</div><div class="lbl">ABOer fra<br>samme familier</div></div>
+    </div>
+    <div class="cards">
+      <div class="card accent-top">
+        <div class="head">Du står ikke alene</div>
+        <div class="desc">En komplett støttestruktur — opline-mentor, lokale møter, internasjonale eventer, materiell på flere språk.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Et bevist mønster</div>
+        <div class="desc">Tim Foley, Bill Britt og over 1 000 andre Diamonds har fulgt samme system. Ikke teori — en oppskrift testet i 60+ år.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Duplikasjon i praksis</div>
+        <div class="desc">Det du lærer kan du lære videre. Systemet er bygget for å skaleres — uavhengig av bakgrunn, utdanning eller erfaring.</div>
+      </div>
+    </div>
+    <div class="feature">
+      <div style="font-size:28px; color:var(--accent); line-height:1;">"</div>
+      <div class="bigQ">Det viktigste foreldrene våre ga oss var et sett med prinsipper å leve etter — og et system som lar vanlige folk gjøre noe ekstraordinært.</div>
+      <div style="margin-top:12px; height:1px; width:40px; background:var(--gold);"></div>
+      <div class="qSrc">Steve Yager</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 7: TOOLS ════ -->
+<section class="scene" data-dur="11">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Verktøyene</div>
+    </div>
+    <h2 class="serif title-l">Bøker, lyd og samlinger</h2>
+    <div class="body soft italic">
+      Dexter var den første som tok i bruk «tools» som en integrert del av forretningen. De tre verktøyene utgjør fortsatt fundamentet.
+    </div>
+    <div class="cards">
+      <div class="card accent-top">
+        <div class="head">Bøker</div>
+        <div class="desc">Don't Let Anybody Steal Your Dream, Millionaire Mentality, The Business Handbook m.fl. Brukes til selvstudium og deles videre.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Lyd & video</div>
+        <div class="desc">Lydopptak fra ledere — historisk på kassett, i dag streaming. Brukes daglig for å holde tankesett og motivasjon i gang.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Samlinger (functions)</div>
+        <div class="desc">Lokale møter, regionsamlinger og store seminarer som «Free Enterprise Day» og «Family Reunion».</div>
+      </div>
+    </div>
+    <div style="text-align:center; font-family:Georgia,serif; font-style:italic; color:var(--gold); font-size:14px; margin-top:6px; opacity:0; animation:textIn 0.5s 1.2s ease forwards;">
+      Det som måles og dupliseres, det vokser.
+    </div>
+  </div>
+</section>
+
+<!-- ════ 7: FOUR PILLARS ════ -->
+<section class="scene" data-dur="12">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Prinsipper</div>
+    </div>
+    <h2 class="serif title-l">De fire pilarene</h2>
+    <div class="cards">
+      <div class="pillar-card">
+        <div class="num-r">01</div>
+        <div class="pttl">Drømmen</div>
+        <div class="pdesc">Alt starter med en tydelig, personlig drøm. Uten drøm — ingen drivkraft.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="num-r">02</div>
+        <div class="pttl">Planen</div>
+        <div class="pdesc">En definert, repeterbar måte å vise forretningen på. Kontinuitet og duplikasjon — ikke improvisasjon.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="num-r">03</div>
+        <div class="pttl">Fellesskapet</div>
+        <div class="pdesc">Du bygger ikke alene. Mentorskap, oppline-støtte og samlinger holder folk i bevegelse over år.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="num-r">04</div>
+        <div class="pttl">Holdningen</div>
+        <div class="pdesc">Du kan ikke alltid styre omstendighetene, men du kan styre holdningen din.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 8: INTERNET SERVICES ════ -->
+<section class="scene" data-dur="11">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Organisasjonen</div>
+    </div>
+    <h2 class="serif title-l">InterNET Services</h2>
+    <div class="body lead italic">Hjernekontoret for Yager-systemet</div>
+    <div class="body soft">
+      InterNET Services Corp. — med hovedkontor i Fort Mill, South Carolina — er Yager-organisasjonens infrastruktur for opplæring, eventer og produksjon av materiell.
+    </div>
+    <ul class="bullets">
+      <li>Hovedkontor på 365 000 kvadratfot</li>
+      <li>Kontorer i ca. 20 land — IBOer i 40+ land</li>
+      <li>Materiell på flere språk</li>
+      <li>Driver Family Reunion, Free Enterprise Day, Dream Night</li>
+    </ul>
+    <div class="lead-card">
+      <div class="ttl">LEDELSE I DAG</div>
+      <div class="lead-row"><div class="nm">Jeff Yager</div><div class="rl">President</div></div>
+      <div class="lead-row"><div class="nm">Doyle Yager</div><div class="rl">CEO, InterNET Services</div></div>
+      <div class="lead-row"><div class="nm">Steve Yager</div><div class="rl">Vice President</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 9: THREE BROTHERS ════ -->
+<section class="scene" data-dur="14">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Neste generasjon</div>
+    </div>
+    <h2 class="serif title-l">Jeff, Doyle og Steve</h2>
+    <div class="body soft italic">
+      Etter at Dexter gikk bort i 2019, drives familieforretningen videre av de tre brødrene — partnere i organisasjonen i over 40 år.
+    </div>
+    <div class="cards">
+      <div class="bio-card">
+        <div class="top">
+          <div class="name">Jeff Yager</div>
+          <div class="role">President</div>
+        </div>
+        <div class="body-txt">Jobber tett med IBOer, generelt ansvar for ledelse og økonomi. Reiser internasjonalt for å bygge relasjoner.</div>
+        <div class="quote">Vi blender virkelig godt sammen.</div>
+      </div>
+      <div class="bio-card">
+        <div class="top">
+          <div class="name">Doyle Yager</div>
+          <div class="role">CEO · IBO i 42+ år</div>
+        </div>
+        <div class="body-txt">Sitter i IBOAI Board og jobber direkte med Amway Corporation. Forfatter, sammen med Dexter, av The Business Handbook.</div>
+        <div class="quote">Du kan ikke alltid styre omstendighetene, men du kan alltid styre holdningen din.</div>
+      </div>
+      <div class="bio-card">
+        <div class="top">
+          <div class="name">Steve Yager</div>
+          <div class="role">Vice President</div>
+        </div>
+        <div class="body-txt">Vokste inn i forretningen sammen med brødrene fra ung alder. Aktiv i opplæring, eventer og daglig drift.</div>
+        <div class="quote">Det viktigste foreldrene våre ga oss var et sett med prinsipper å leve etter.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 10: LEGACY ════ -->
+<section class="scene" data-dur="13">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Arven</div>
+    </div>
+    <h2 class="serif title-l">Hvorfor det betyr noe</h2>
+    <div class="cards">
+      <div class="card accent-top">
+        <div class="head">En arv bygget på prinsipper</div>
+        <div class="desc">Drøm, plan, hardt arbeid og holdning — overlevd 60+ år og 40+ land.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Mennesker, ikke produkter</div>
+        <div class="desc">«We build relationships — and people don't normally quit on people who love them.»</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Bransjens høyeste anerkjennelse</div>
+        <div class="desc">Innført postumt i Direct Selling Hall of Fame i 2025 — for å ha formet hvordan moderne nettverksmarkedsføring drives.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Et levende system</div>
+        <div class="desc">Driftes daglig og videreutvikles for nye generasjoner.</div>
+      </div>
+    </div>
+    <div class="feature">
+      <div style="font-size:32px; color:var(--accent); line-height:1;">"</div>
+      <div class="bigQ">A dream unrealized is a dream imprisoned by your greatest enemy: fear of failure.</div>
+      <div style="margin-top:14px; height:1px; width:50px; background:var(--gold);"></div>
+      <div class="qSrc">Dexter Yager · 1939–2019</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 11: REFLECTION ════ -->
+<section class="scene" data-dur="14">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Til ettertanke</div>
+    </div>
+    <h2 class="serif title-l">En menneskerettet forretning</h2>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <p class="body" style="font-size: 16px; line-height: 1.6;">
+        Det høres enkelt ut. Det <em>er</em> det også. Men enkelt er ikke det samme som uten arbeid.
+      </p>
+      <p class="body" style="font-size: 16px; line-height: 1.6;">
+        Ingenting her kommer gratis. Det krever at du først bygger deg selv — fordi du kan ikke gi andre noe du ikke selv har. Karakter, kunnskap, utholdenhet, troverdighet.
+      </p>
+      <p class="body" style="font-size: 16px; line-height: 1.6; color: var(--accent); font-style: italic;">
+        Dette er ikke en produktforretning. Det er en menneskerettet forretning. Og råvaren er ekte interesse for andres suksess.
+      </p>
+    </div>
+
+    <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 12px; opacity: 0; animation: textIn 0.6s 1.2s ease forwards;">
+      <div style="width: 24px; height: 1.5px; background: var(--gold);"></div>
+      <div style="font-family: Georgia, serif; font-style: italic; color: var(--gold); font-size: 14px;">
+        Bygg deg selv — så kan du bygge andre.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 12: CLOSING ════ -->
+<section class="scene dark" data-dur="8">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">AVSLUTNING</div>
+    </div>
+    <h2 class="serif close-title">Et system bygget på drøm, relasjoner og duplikasjon.</h2>
+    <div class="divider"></div>
+    <div class="subtitle">Spørsmål, refleksjoner eller en prat om systemet?</div>
+    
+  </div>
+</section>
+
+</div>
+
+<div id="controls">
+  <span id="counter">1 / 13</span>
+  <div id="playPause">⏸</div>
+  <div id="dots"></div>
+</div>
+
+<script>
+const scenes = Array.from(document.querySelectorAll('.scene'));
+const dotsBox = document.getElementById('dots');
+const counter = document.getElementById('counter');
+const playBtn = document.getElementById('playPause');
+const progBar = document.getElementById('progress-bar');
+const stage = document.getElementById('stage');
+
+scenes.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  d.addEventListener('click', e => { e.stopPropagation(); goTo(i); lastTick=null; });
+  dotsBox.appendChild(d);
+});
+const dots = Array.from(document.querySelectorAll('.dot'));
+
+let cur = 0;
+let playing = true;
+let lastTick = null;
+let elapsed = 0;
+
+function goTo(n) {
+  if (n < 0) n = 0;
+  if (n >= scenes.length) n = scenes.length - 1;
+  scenes[cur].classList.remove('active');
+  setTimeout(() => {
+    const el = scenes[n];
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    scenes[n] = fresh;
+    fresh.classList.add('active');
+    fresh.scrollTop = 0;
+  }, 30);
+  cur = n;
+  dots.forEach((d, i) => d.classList.toggle('active', i === cur));
+  // scroll active dot into view
+  if (dots[cur]) dots[cur].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  counter.textContent = `${cur + 1} / ${scenes.length}`;
+  elapsed = 0;
+  updateProgress();
+}
+function getDur() { return parseFloat(scenes[cur].dataset.dur || 8) * 1000; }
+function updateProgress() {
+  const d = getDur();
+  const pct = Math.min(elapsed / d, 1);
+  progBar.style.width = ((cur + pct) / scenes.length * 100) + '%';
+}
+function tick(t) {
+  if (!playing) { lastTick = null; requestAnimationFrame(tick); return; }
+  if (lastTick == null) lastTick = t;
+  elapsed += (t - lastTick);
+  lastTick = t;
+  updateProgress();
+  if (elapsed >= getDur()) {
+    if (cur < scenes.length - 1) goTo(cur + 1);
+    else { playing = false; playBtn.textContent = '▶'; }
+  }
+  requestAnimationFrame(tick);
+}
+playBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  playing = !playing;
+  playBtn.textContent = playing ? '⏸' : '▶';
+  lastTick = null;
+});
+
+// keyboard (for desktop testing)
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(cur+1); lastTick=null; }
+  if (e.key === 'ArrowLeft')                   { goTo(cur-1); lastTick=null; }
+  if (e.key === 'p' || e.key === 'P')          { playing = !playing; playBtn.textContent = playing ? '⏸' : '▶'; lastTick=null; }
+});
+
+// ── TOUCH SWIPE NAVIGATION ──
+let tStart = null;
+let tStartTime = 0;
+let tScrollTop = 0;
+stage.addEventListener('touchstart', e => {
+  if (e.target.closest('#controls')) return;
+  const t = e.changedTouches[0];
+  tStart = { x: t.clientX, y: t.clientY };
+  tStartTime = Date.now();
+  tScrollTop = scenes[cur].scrollTop;
+}, { passive: true });
+
+stage.addEventListener('touchend', e => {
+  if (!tStart) return;
+  if (e.target.closest('#controls')) { tStart = null; return; }
+  const t = e.changedTouches[0];
+  const dx = t.clientX - tStart.x;
+  const dy = t.clientY - tStart.y;
+  const dt = Date.now() - tStartTime;
+  const absX = Math.abs(dx), absY = Math.abs(dy);
+
+  // Tap (small movement, fast) → advance
+  if (absX < 10 && absY < 10 && dt < 300) {
+    goTo(cur + 1);
+    lastTick = null;
+  }
+  // Horizontal swipe (must be horizontal-dominant)
+  else if (absX > 50 && absX > absY * 1.5) {
+    if (dx < 0) goTo(cur + 1);
+    else        goTo(cur - 1);
+    lastTick = null;
+  }
+  tStart = null;
+}, { passive: true });
+
+// init
+dots[0].classList.add('active');
+counter.textContent = `1 / ${scenes.length}`;
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

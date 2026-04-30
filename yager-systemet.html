@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yager-systemet</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:       #F7F4EE;
+  --ink:      #1C2A2E;
+  --inkSoft:  #445156;
+  --accent:   #0E6E5C;
+  --accentLt: #C9DDD6;
+  --gold:     #B08A3E;
+  --paper:    #FFFFFF;
+  --rule:     #D9D2C4;
+  --darkBg:   #0E1A1D;
+}
+
+html, body {
+  width:100vw; height:100vh; overflow:hidden;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  user-select:none;
+}
+
+/* serif for headings */
+.serif { font-family: Georgia, 'Times New Roman', serif; }
+
+/* ── BACKGROUND (subtly animated cream) ── */
+#bg {
+  position:fixed; inset:0; z-index:0;
+  background: linear-gradient(135deg, #F7F4EE 0%, #F0EAD8 50%, #F7F4EE 100%);
+  background-size: 300% 300%;
+  animation: bgShift 24s ease infinite;
+}
+@keyframes bgShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+#bg::after {
+  content:'';
+  position:absolute; inset:0;
+  background: repeating-linear-gradient(
+    -52deg, transparent, transparent 58px,
+    rgba(176,138,62,0.04) 58px, rgba(176,138,62,0.04) 60px
+  );
+}
+
+/* gold top bar */
+#topbar {
+  position:fixed; top:0; left:0; right:0; height:4px; z-index:100;
+  background: linear-gradient(to right, var(--gold), #d4a85c, var(--gold));
+}
+#progress-wrap {
+  position:fixed; top:4px; left:0; right:0; height:3px; z-index:100;
+  background: rgba(28,42,46,0.06);
+}
+#progress-bar {
+  height:100%; background: rgba(176,138,62,0.5);
+  transition: width 0.15s linear;
+}
+
+/* ── STAGE ── */
+#stage { position:fixed; inset:0; z-index:10; }
+
+/* ── SCENES ── */
+.scene {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  padding: 5vh 8vw 80px;
+  opacity:0; pointer-events:none;
+  transition: opacity 0.5s ease;
+}
+.scene.active { opacity:1; pointer-events:all; }
+.scene.dark { background: var(--darkBg); }
+.scene.dark .ink { color: var(--bg); }
+
+.scene-inner {
+  max-width: 1100px; width:100%;
+  display:flex; flex-direction:column;
+  gap: 1.5em;
+}
+
+/* eyebrow + rule */
+.eyebrow-row { display:flex; flex-direction:column; gap:0.5em; }
+.eyebrow-bar {
+  width: 36px; height: 3px;
+  background: var(--gold);
+  opacity: 0;
+  animation: barIn 0.6s 0.1s ease forwards;
+}
+.eyebrow {
+  font-size: 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: textIn 0.6s 0.2s ease forwards;
+}
+@keyframes barIn {
+  from { opacity:0; transform: scaleX(0); transform-origin:left; }
+  to   { opacity:1; transform: scaleX(1); }
+}
+@keyframes textIn {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* big title */
+.title-xl {
+  font-size: clamp(48px, 9vw, 110px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.0;
+  color: var(--bg);
+  opacity:0;
+  animation: scaleIn 0.9s 0.2s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.title-l {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink);
+  opacity:0;
+  animation: titleIn 0.8s 0.3s ease forwards;
+}
+.title-m {
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+  opacity:0;
+  animation: titleIn 0.7s 0.3s ease forwards;
+}
+@keyframes scaleIn {
+  from { opacity:0; transform: scale(0.96); }
+  to   { opacity:1; transform: scale(1); }
+}
+@keyframes titleIn {
+  from { opacity:0; transform: translateY(20px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.subtitle {
+  font-size: clamp(16px, 1.7vw, 22px);
+  color: var(--accent);
+  font-style: italic;
+  opacity:0;
+  animation: textIn 0.7s 0.6s ease forwards;
+}
+.dark .subtitle { color: var(--accentLt); }
+
+.byline {
+  font-size: 13px;
+  color: var(--inkSoft);
+  font-style: italic;
+  opacity: 0;
+  animation: textIn 0.7s 0.9s ease forwards;
+}
+.dark .byline { color: #8FA09D; }
+
+.body {
+  font-size: clamp(14px, 1.5vw, 18px);
+  line-height: 1.55;
+  color: var(--ink);
+  opacity:0;
+  animation: textIn 0.7s 0.5s ease forwards;
+  max-width: 900px;
+}
+.body.soft { color: var(--inkSoft); }
+.body.italic { font-style: italic; }
+.dark .body { color: var(--bg); }
+.dark .body.soft { color: var(--accentLt); }
+
+/* spacer line */
+.divider {
+  width: 80px; height: 1px;
+  background: var(--gold);
+  margin: 0.5em 0;
+  opacity:0;
+  animation: textIn 0.5s 0.8s ease forwards;
+}
+
+/* ── CARDS GRID ── */
+.cards { display:grid; gap: 1.2em; }
+.cards.c2 { grid-template-columns: repeat(2, 1fr); }
+.cards.c3 { grid-template-columns: repeat(3, 1fr); }
+.cards.c4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 800px) {
+  .cards.c3, .cards.c4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.card {
+  background: var(--paper);
+  padding: 1.2em 1.3em;
+  border: 0.5px solid var(--rule);
+  position:relative;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: cardIn 0.6s ease forwards;
+}
+.card.gold-strip::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width: 4px; background: var(--gold);
+}
+.card.accent-top::before {
+  content:''; position:absolute; left:0; right:0; top:0;
+  height: 4px; background: var(--accent);
+}
+.card .num {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 32px;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.3em;
+}
+.card .head {
+  font-family: Georgia, serif;
+  font-size: clamp(15px, 1.6vw, 19px);
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 0.4em;
+}
+.card .desc {
+  font-size: clamp(11px, 1.1vw, 13px);
+  color: var(--inkSoft);
+  line-height: 1.5;
+}
+.card .yr {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+  font-size: clamp(16px, 1.7vw, 20px);
+  margin-bottom: 0.4em;
+}
+@keyframes cardIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.card:nth-child(1) { animation-delay: 0.4s; }
+.card:nth-child(2) { animation-delay: 0.55s; }
+.card:nth-child(3) { animation-delay: 0.7s; }
+.card:nth-child(4) { animation-delay: 0.85s; }
+.card:nth-child(5) { animation-delay: 1.0s; }
+.card:nth-child(6) { animation-delay: 1.15s; }
+.card:nth-child(7) { animation-delay: 1.3s; }
+
+/* dark card variant */
+.card.dark {
+  background: var(--ink);
+  border: none;
+}
+.card.dark .head { color: var(--bg); }
+.card.dark .desc { color: var(--accentLt); }
+
+/* ── STAT BLOCKS ── */
+.stats { display:grid; grid-template-columns: repeat(4, 1fr); gap: 1em; }
+.stat {
+  background: var(--paper);
+  border: 0.5px solid var(--rule);
+  padding: 1em;
+  text-align:center;
+  opacity:0;
+  animation: cardIn 0.6s 0.5s ease forwards;
+}
+.stat:nth-child(2) { animation-delay: 0.65s; }
+.stat:nth-child(3) { animation-delay: 0.8s; }
+.stat:nth-child(4) { animation-delay: 0.95s; }
+.stat .big {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--accent);
+  font-size: clamp(34px, 4.5vw, 56px);
+  line-height: 1;
+}
+.stat .lbl {
+  font-size: 11px;
+  color: var(--inkSoft);
+  margin-top: 0.5em;
+  line-height: 1.4;
+}
+
+/* ── PILLARS / TWO-COLUMN ── */
+.split {
+  display:grid; grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+}
+.split.uneven { grid-template-columns: 1fr 1.2fr; }
+@media (max-width: 800px) {
+  .split { grid-template-columns: 1fr; }
+}
+
+.bio-card {
+  background: var(--paper);
+  position:relative;
+  box-shadow: 0 4px 16px rgba(28,42,46,0.06);
+  opacity:0;
+  animation: cardIn 0.6s ease forwards;
+}
+.bio-card .top {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 0.9em 1.2em;
+}
+.bio-card .name {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: clamp(20px, 2vw, 26px);
+  margin-bottom: 0.15em;
+}
+.bio-card .role {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+.bio-card .body-txt {
+  padding: 1em 1.2em;
+  font-size: clamp(12px, 1.2vw, 14px);
+  color: var(--ink);
+  line-height: 1.55;
+}
+.bio-card .quote {
+  padding: 0 1.2em 1.2em;
+  font-style: italic;
+  font-family: Georgia, serif;
+  color: var(--accent);
+  font-size: clamp(12px, 1.2vw, 14px);
+  border-left: 3px solid var(--accentLt);
+  margin: 0 1.2em 1em;
+  padding: 0.5em 0 0.5em 0.8em;
+}
+.bio-card:nth-child(1) { animation-delay: 0.4s; }
+.bio-card:nth-child(2) { animation-delay: 0.6s; }
+.bio-card:nth-child(3) { animation-delay: 0.8s; }
+
+/* ── TIMELINE ── */
+.timeline {
+  position:relative;
+  padding: 3em 0;
+}
+.timeline-line {
+  position:absolute; left:0; right:0; top:50%;
+  height: 1.5px;
+  background: var(--rule);
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: lineIn 1.2s 0.3s ease forwards;
+}
+@keyframes lineIn {
+  to { transform: scaleX(1); }
+}
+.timeline-row {
+  position:relative;
+  display:flex; justify-content:space-between;
+  align-items:center;
+  height: 6em;
+}
+.tl-stop {
+  position:relative;
+  flex:1;
+  text-align:center;
+  opacity:0;
+  animation: textIn 0.6s ease forwards;
+}
+.tl-stop:nth-child(1) { animation-delay: 0.6s; }
+.tl-stop:nth-child(2) { animation-delay: 0.75s; }
+.tl-stop:nth-child(3) { animation-delay: 0.9s; }
+.tl-stop:nth-child(4) { animation-delay: 1.05s; }
+.tl-stop:nth-child(5) { animation-delay: 1.2s; }
+.tl-stop:nth-child(6) { animation-delay: 1.35s; }
+.tl-stop:nth-child(7) { animation-delay: 1.5s; }
+.tl-stop:nth-child(8) { animation-delay: 1.65s; }
+.tl-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2.5px solid var(--bg);
+  margin: 0 auto;
+  position:relative; z-index:2;
+  box-shadow: 0 2px 6px rgba(14,110,92,0.3);
+}
+.tl-year {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+  font-size: clamp(15px, 1.6vw, 20px);
+}
+.tl-label {
+  font-size: 10px;
+  color: var(--inkSoft);
+  line-height: 1.35;
+  padding: 0 0.3em;
+}
+.tl-stop.above { display: flex; flex-direction: column; align-items: center; }
+.tl-stop.above .tl-content {
+  position: absolute; bottom: 60%; left: 0; right: 0;
+  display: flex; flex-direction: column; align-items:center;
+  gap: 0.2em;
+}
+.tl-stop.below .tl-content {
+  position: absolute; top: 60%; left: 0; right: 0;
+  display: flex; flex-direction: column; align-items:center;
+  gap: 0.2em;
+}
+
+.callout {
+  background: var(--accentLt);
+  padding: 1em 1.4em;
+  margin-top: 2em;
+  opacity:0;
+  animation: textIn 0.6s 1.5s ease forwards;
+}
+.callout .ttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin-bottom: 0.4em;
+}
+.callout .txt {
+  font-size: clamp(12px, 1.3vw, 15px);
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+/* ── PILLARS GRID 2x2 ── */
+.pillar-card {
+  background: var(--paper);
+  border: 0.5px solid var(--rule);
+  border-left: 4px solid var(--gold);
+  padding: 1.1em 1.3em;
+  position:relative;
+  opacity:0;
+  transform: translateX(-12px);
+  animation: cardSlideIn 0.6s ease forwards;
+}
+.pillar-card:nth-child(1) { animation-delay: 0.4s; }
+.pillar-card:nth-child(2) { animation-delay: 0.55s; }
+.pillar-card:nth-child(3) { animation-delay: 0.7s; }
+.pillar-card:nth-child(4) { animation-delay: 0.85s; }
+@keyframes cardSlideIn {
+  to { opacity:1; transform: translateX(0); }
+}
+.pillar-card .num-r {
+  position:absolute; right: 0.6em; top: 0.2em;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 38px;
+  color: var(--accentLt);
+  line-height: 1;
+}
+.pillar-card .pttl {
+  font-family: Georgia, serif;
+  font-size: clamp(18px, 2vw, 24px);
+  color: var(--ink);
+  margin-bottom: 0.4em;
+}
+.pillar-card .pdesc {
+  font-size: clamp(11px, 1.1vw, 13px);
+  color: var(--inkSoft);
+  line-height: 1.5;
+  max-width: 90%;
+}
+
+/* ── DARK ROOM CARD (used for closing/feature quotes) ── */
+.feature {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 1.5em;
+  position: relative;
+}
+.feature .bigQ {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: clamp(18px, 2.4vw, 30px);
+  line-height: 1.2;
+  color: var(--bg);
+}
+.feature .qSrc {
+  margin-top: 1em;
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+/* ── PIN-LEVELS PANEL ── */
+.pin-pair { display:grid; grid-template-columns: 1fr 1fr; gap: 1em; }
+.pin-panel {
+  background: var(--paper);
+  border: 0.5px solid var(--rule);
+  padding: 1.1em;
+  opacity:0;
+  animation: cardIn 0.6s 0.4s ease forwards;
+}
+.pin-panel.dark {
+  background: var(--ink);
+  color: var(--bg);
+  position:relative;
+  animation-delay: 0.55s;
+}
+.pin-panel.dark::before {
+  content:''; position:absolute; left:0; top:0; bottom:0;
+  width: 4px; background: var(--gold);
+}
+.pin-panel .ttl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  margin-bottom: 0.8em;
+}
+.pin-panel.dark .ttl { color: var(--gold); }
+.pin-row {
+  display: grid;
+  grid-template-columns: 0.8fr 1.5fr;
+  gap: 0.6em;
+  padding: 0.4em 0;
+  font-size: clamp(11px, 1.15vw, 13px);
+}
+.pin-row .yr {
+  font-family: Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+}
+.pin-row .lbl {
+  color: var(--ink);
+}
+.pin-panel.dark .pin-row .lbl { color: var(--bg); }
+.pin-panel .sub {
+  font-size: 9px;
+  color: var(--inkSoft);
+  font-style: italic;
+  margin-top: 0.1em;
+  grid-column: 2;
+}
+.pin-panel.dark .sub { color: var(--accentLt); }
+
+/* ── CONTROLS ── */
+#controls {
+  position:fixed; bottom: 18px; left:50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display:flex; align-items:center; gap: 10px;
+  padding: 5px 12px 5px 14px;
+  background: rgba(28,42,46,0.7);
+  backdrop-filter: blur(8px);
+  border-radius: 999px;
+  color: white;
+  font-size: 11px;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+#controls:hover { opacity: 1; }
+#playPause {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  cursor: pointer;
+  color: #1C2A2E;
+  font-weight: 700;
+  font-size: 9px;
+  transition: transform 0.15s;
+}
+#playPause:hover { transform: scale(1.1); }
+#dots { display:flex; gap: 5px; }
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  cursor:pointer;
+  transition: all 0.2s;
+}
+.dot.active { background: var(--gold); width: 14px; border-radius: 3px; }
+.dot:hover { background: rgba(255,255,255,0.55); }
+#counter { font-variant-numeric: tabular-nums; opacity: 0.6; font-size: 10px; }
+#timering {
+  width: 16px; height: 16px;
+  position:relative;
+}
+#timering svg { transform: rotate(-90deg); }
+#timering circle {
+  fill:none; stroke-width: 1.5;
+}
+#timering .bg { stroke: rgba(255,255,255,0.15); }
+#timering .fg { stroke: var(--gold); transition: stroke-dashoffset 0.15s linear; }
+
+/* ── HINT ── */
+#hint {
+  position: fixed; top: 16px; right: 16px;
+  z-index: 200;
+  font-size: 10px; color: var(--inkSoft);
+  background: rgba(247,244,238,0.85);
+  padding: 6px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+.scene.dark + #hint { color: var(--accentLt); }
+
+/* responsive tweaks */
+@media (max-width: 700px) {
+  .scene { padding: 8vh 6vw; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .timeline-row { flex-direction:column; height:auto; gap:1.2em; }
+  .timeline-line { display:none; }
+  .pin-pair { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="topbar"></div>
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+
+<div id="hint">Klikk for å gå videre · piltaster · P pauser</div>
+
+<div id="stage">
+
+<!-- ════ SCENE 1: TITLE ════ -->
+<section class="scene dark active" data-dur="6">
+  <div class="scene-inner" style="align-items:flex-start; gap:1em;">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar" style="background:var(--gold);"></div>
+      <div class="eyebrow">EN PRESENTASJON</div>
+    </div>
+    <h1 class="serif title-xl">Yager-systemet</h1>
+    <div class="subtitle">Historikk, prinsipper og arven etter en familie</div>
+    <div class="divider" style="background:var(--gold);"></div>
+    <div class="byline">Bygget av Dexter & Birdie Yager fra 1964 — videreført av Jeff, Doyle og Steve Yager</div>
+  </div>
+</section>
+
+<!-- ════ SCENE 2: WHO ════ -->
+<section class="scene" data-dur="9">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Familien</div>
+    </div>
+    <h2 class="serif title-l">Dexter & Birdie Yager — opphavet</h2>
+    <div class="body soft italic">
+      Dexter R. Yager Sr. (1939–2019) ble av mange kalt "The Father of Modern MLM". Sammen med kona Birdie bygde han — fra Rome, NY og senere Charlotte, NC — den største organisasjonen i Amways historie.
+    </div>
+    <div class="cards c4" style="margin-top:0.5em;">
+      <div class="card gold-strip">
+        <div class="head">Født</div>
+        <div class="desc">Fulton, NY · oppvokst i Rome, NY</div>
+      </div>
+      <div class="card gold-strip">
+        <div class="head">Bakgrunn</div>
+        <div class="desc">Selger hos Sears, Ford og Utica Club Beer</div>
+      </div>
+      <div class="card gold-strip">
+        <div class="head">Inn i Amway</div>
+        <div class="desc">1964 — pitchet av en slektning</div>
+      </div>
+      <div class="card gold-strip">
+        <div class="head">Anerkjennelse</div>
+        <div class="desc">Founders Crown Ambassador 65 FAA — første i verden på 60 FAA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 3: TIMELINE ════ -->
+<section class="scene" data-dur="11">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Tidslinje</div>
+    </div>
+    <h2 class="serif title-l">Fra Rome, New York til 40+ land</h2>
+    <div class="timeline">
+      <div class="timeline-line"></div>
+      <div class="timeline-row">
+        <div class="tl-stop above">
+          <div class="tl-content"><div class="tl-year">1964</div><div class="tl-label">Distributør i Amway</div></div>
+          <div class="tl-dot"></div>
+        </div>
+        <div class="tl-stop below">
+          <div class="tl-dot"></div>
+          <div class="tl-content"><div class="tl-year">1969</div><div class="tl-label">Til Charlotte, NC</div></div>
+        </div>
+        <div class="tl-stop above">
+          <div class="tl-content"><div class="tl-year">1970</div><div class="tl-label">Diamond — fri fra jobb</div></div>
+          <div class="tl-dot"></div>
+        </div>
+        <div class="tl-stop below">
+          <div class="tl-dot"></div>
+          <div class="tl-content"><div class="tl-year">1979</div><div class="tl-label">Crown</div></div>
+        </div>
+        <div class="tl-stop above">
+          <div class="tl-content"><div class="tl-year">1985</div><div class="tl-label">Crown Ambassador</div></div>
+          <div class="tl-dot"></div>
+        </div>
+        <div class="tl-stop below">
+          <div class="tl-dot"></div>
+          <div class="tl-content"><div class="tl-year">2006</div><div class="tl-label">Founders Crown Ambassador 60 FAA</div></div>
+        </div>
+        <div class="tl-stop above">
+          <div class="tl-content"><div class="tl-year">2019</div><div class="tl-label">Dexter går bort 7. januar</div></div>
+          <div class="tl-dot"></div>
+        </div>
+        <div class="tl-stop below">
+          <div class="tl-dot"></div>
+          <div class="tl-content"><div class="tl-year">2025</div><div class="tl-label">Direct Selling Hall of Fame (postumt)</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="ttl">I DAG</div>
+      <div class="txt">Organisasjonen strekker seg over 40+ land · InterNET Services har kontorer i ca. 20 land · Yager-organisasjonen omsetter for milliardbeløp via flere generasjoner og hundretusener av distributører.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 4: PIN LEVELS ════ -->
+<section class="scene" data-dur="12">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Anerkjennelse</div>
+    </div>
+    <h2 class="serif title-l">Nivåene Amway måtte bygge for Dexter</h2>
+    <div class="body soft italic">
+      Dexter klatret raskere enn Amways anerkjennelses­system var bygget for. Da han nådde toppen, måtte selskapet legge til nye nivåer. Tre av FAA-nivåene ble innført som direkte respons på at Yager — og noen få på samme nivå — passerte taket.
+    </div>
+    <div class="pin-pair">
+      <div class="pin-panel">
+        <div class="ttl">DEXTERS PIN-NIVÅER</div>
+        <div class="pin-row"><div class="yr">1964</div><div class="lbl">Silver Producer</div></div>
+        <div class="pin-row"><div class="yr">~1965</div><div class="lbl">Diamond</div></div>
+        <div class="pin-row"><div class="yr">1970</div><div class="lbl">Double Diamond</div></div>
+        <div class="pin-row"><div class="yr">1979</div><div class="lbl">Crown</div></div>
+        <div class="pin-row"><div class="yr">1985</div><div class="lbl">Crown Ambassador</div></div>
+        <div class="pin-row"><div class="yr">1997</div><div class="lbl">FDSA — 40 FAA</div></div>
+      </div>
+      <div class="pin-panel dark">
+        <div class="ttl">NIVÅER OPPRETTET FOR Å HOLDE TRITT</div>
+        <div class="pin-row"><div class="yr">1998</div><div><div class="lbl">45 FAA Credits</div><div class="sub">Lagt til etter Dexter & Birdie nådde nivået</div></div></div>
+        <div class="pin-row"><div class="yr">1999</div><div><div class="lbl">50 FAA Credits</div><div class="sub">Yager og Nakajima passerte taket</div></div></div>
+        <div class="pin-row"><div class="yr">2002</div><div><div class="lbl">Founders Crown Ambassador (55 FAA)</div><div class="sub">Etablert globalt</div></div></div>
+        <div class="pin-row"><div class="yr">2006</div><div><div class="lbl">60 FAA Credits</div><div class="sub">Yagers først i verden</div></div></div>
+        <div class="pin-row"><div class="yr">2011</div><div><div class="lbl">65 FAA Credits</div><div class="sub">Den høyeste anerkjennelsen i Amways historie</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 5: WHAT IS YAGER SYSTEM ════ -->
+<section class="scene" data-dur="9">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Definisjon</div>
+    </div>
+    <h2 class="serif title-l">Hva er «Yager-systemet»?</h2>
+    <div class="split uneven">
+      <div>
+        <div class="body" style="font-style:italic; font-size:clamp(18px,2vw,24px); color:var(--ink);">
+          Et opplærings- og duplikasjonssystem
+        </div>
+        <div class="body" style="margin-top:1em;">
+          Yager-systemet er ikke et selskap — det er et strukturert system av bøker, lyd, video, samlinger og mentorskap som gjør at Amway-forretninger bygges og dupliseres på samme måte uavhengig av hvor i verden distributøren er.
+        </div>
+        <div class="body soft italic" style="margin-top:1em;">
+          Dexter var den første som systematisk koblet motivasjon og opplæring til en MLM-forretning — derfor omtales han som modern MLMs grunnlegger.
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="big">60+</div><div class="lbl">år siden<br>start i 1964</div></div>
+        <div class="stat"><div class="big">40+</div><div class="lbl">land med IBOer<br>i organisasjonen</div></div>
+        <div class="stat"><div class="big">1M+</div><div class="lbl">personer i<br>organisasjonen historisk</div></div>
+        <div class="stat"><div class="big">12+</div><div class="lbl">bøker forfattet<br>av Dexter</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 6: WHY IT WORKS FOR ABOs ════ -->
+<section class="scene" data-dur="13">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Suksessen i tall</div>
+    </div>
+    <h2 class="serif title-l">Hvorfor det fungerer for ABOer</h2>
+    <div class="body soft italic">
+      Yager-systemet er den mest beviste oppskriften i hele direktesalgshistorien. Ingen annen organisasjon — i noe selskap — har produsert flere ledere, mer omsetning eller flere generasjoner av suksess. Dette er hva som gjør det verdifullt for hver enkelt ABO.
+    </div>
+
+    <div class="stats" style="margin-top:0.5em;">
+      <div class="stat">
+        <div class="big">$2,6 mrd</div>
+        <div class="lbl">årlig omsetning<br>via downline (anslag)</div>
+      </div>
+      <div class="stat">
+        <div class="big">1 000+</div>
+        <div class="lbl">Diamonds<br>i downline historisk</div>
+      </div>
+      <div class="stat">
+        <div class="big">40+</div>
+        <div class="lbl">land med<br>aktive ABOer</div>
+      </div>
+      <div class="stat">
+        <div class="big">4. gen.</div>
+        <div class="lbl">ABOer fra<br>samme familier</div>
+      </div>
+    </div>
+
+    <div class="split uneven" style="margin-top:1em;">
+      <div style="display:flex; flex-direction:column; gap:0.7em;">
+        <div class="card accent-top" style="opacity:0; animation:cardIn 0.6s 0.7s ease forwards;">
+          <div class="head">Du står ikke alene</div>
+          <div class="desc">En komplett støttestruktur — opline-mentor, lokale møter, internasjonale eventer, materiell på flere språk.</div>
+        </div>
+        <div class="card accent-top" style="opacity:0; animation:cardIn 0.6s 0.85s ease forwards;">
+          <div class="head">Et bevist mønster</div>
+          <div class="desc">Tim Foley, Bill Britt og over 1 000 andre Diamonds har fulgt samme system. Det er ikke teori — det er en oppskrift som er testet i 60+ år.</div>
+        </div>
+        <div class="card accent-top" style="opacity:0; animation:cardIn 0.6s 1.0s ease forwards;">
+          <div class="head">Duplikasjon i praksis</div>
+          <div class="desc">Det du lærer kan du lære videre. Systemet er bygget for å skaleres — uavhengig av bakgrunn, utdanning eller erfaring.</div>
+        </div>
+      </div>
+      <div class="feature" style="opacity:0; animation:cardIn 0.7s 0.6s ease forwards;">
+        <div style="font-size:38px; color:var(--accent); line-height:1; margin-bottom:0.3em;">"</div>
+        <div class="bigQ" style="font-size:clamp(15px,1.9vw,22px);">Det viktigste foreldrene våre ga oss var et sett med prinsipper å leve etter — og et system som lar vanlige folk gjøre noe ekstraordinært.</div>
+        <div style="margin-top:1em; height:1px; width:50px; background:var(--gold);"></div>
+        <div class="qSrc" style="margin-top:0.6em;">Steve Yager</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 7: TOOLS ════ -->
+<section class="scene" data-dur="9">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Verktøyene</div>
+    </div>
+    <h2 class="serif title-l">Bygget på bøker, lyd og samlinger</h2>
+    <div class="body soft italic">
+      Dexter var den første som tok i bruk «tools» — opplæringsmateriell — som en integrert del av forretningen. De tre verktøyene utgjør fortsatt fundamentet.
+    </div>
+    <div class="cards c3">
+      <div class="card accent-top">
+        <div class="head">Bøker</div>
+        <div class="desc">Don't Let Anybody Steal Your Dream, Millionaire Mentality, The Business Handbook m.fl. Brukes til selvstudium og deles videre til nye distributører.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Lyd & video</div>
+        <div class="desc">Lydopptak fra ledere — historisk på kassett, i dag som streaming. Brukes daglig for å holde tankesett, ferdigheter og motivasjon i gang.</div>
+      </div>
+      <div class="card accent-top">
+        <div class="head">Samlinger (functions)</div>
+        <div class="desc">Lokale møter, regionsamlinger og store seminarer som «Free Enterprise Day» og «Family Reunion» — der momentum og kultur skapes.</div>
+      </div>
+    </div>
+    <div style="text-align:center; font-family:Georgia,serif; font-style:italic; color:var(--gold); font-size:clamp(13px,1.5vw,17px); margin-top:0.5em; opacity:0; animation:textIn 0.6s 1.4s ease forwards;">
+      Det som måles og dupliseres, det vokser.
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 7: FOUR PILLARS ════ -->
+<section class="scene" data-dur="11">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Prinsipper</div>
+    </div>
+    <h2 class="serif title-l">De fire pilarene</h2>
+    <div class="cards c2">
+      <div class="pillar-card">
+        <div class="num-r">01</div>
+        <div class="pttl">Drømmen</div>
+        <div class="pdesc">Alt starter med en tydelig, personlig drøm. Uten drøm — ingen drivkraft. «Dream, struggle, victory» er en kjernesekvens i opplæringen.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="num-r">02</div>
+        <div class="pttl">Planen</div>
+        <div class="pdesc">En definert, repeterbar måte å vise forretningen på («draw the plan»). Kontinuitet og duplikasjon — ikke improvisasjon.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="num-r">03</div>
+        <div class="pttl">Fellesskapet</div>
+        <div class="pdesc">Du bygger ikke alene. Mentorskap, oppline-støtte og samlinger holder folk i bevegelse over år, ikke bare uker.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="num-r">04</div>
+        <div class="pttl">Holdningen</div>
+        <div class="pdesc">«Du kan ikke alltid styre omstendighetene, men du kan styre holdningen din» — et grunnprinsipp Doyle og Steve fortsatt fremhever.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 8: INTERNET SERVICES ════ -->
+<section class="scene" data-dur="9">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Organisasjonen</div>
+    </div>
+    <h2 class="serif title-l">InterNET Services — strukturen bak systemet</h2>
+    <div class="split uneven">
+      <div>
+        <div class="body" style="font-style:italic; color:var(--ink); font-size:clamp(16px,1.8vw,22px);">
+          Hjernekontoret for Yager-systemet
+        </div>
+        <div class="body soft" style="margin-top:1em;">
+          InterNET Services Corp. — med hovedkontor i Fort Mill, South Carolina — er Yager-organisasjonens infrastruktur for opplæring, eventer og produksjon av materiell.
+        </div>
+        <ul style="font-size:clamp(12px,1.2vw,14px); color:var(--ink); margin-top:1em; padding-left:1.2em; line-height:1.8; opacity:0; animation:textIn 0.6s 0.7s ease forwards;">
+          <li>Hovedkontor på 365 000 kvadratfot</li>
+          <li>Kontorer i ca. 20 land — IBOer i 40+ land</li>
+          <li>Produksjon av lyd, video, bøker og digitalt materiell på flere språk</li>
+          <li>Driver Family Reunion, Free Enterprise Day, Dream Night</li>
+        </ul>
+      </div>
+      <div class="card dark gold-strip" style="opacity:0; animation:cardIn 0.6s 0.6s ease forwards; padding:1.5em;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:0.3em; color:var(--gold); margin-bottom:0.7em;">LEDELSE I DAG</div>
+        <div style="display:flex; flex-direction:column; gap:1em;">
+          <div>
+            <div style="font-family:Georgia,serif; font-style:italic; color:var(--bg); font-size:clamp(16px,1.8vw,21px);">Jeff Yager</div>
+            <div style="font-size:11px; color:var(--accentLt);">President</div>
+          </div>
+          <div>
+            <div style="font-family:Georgia,serif; font-style:italic; color:var(--bg); font-size:clamp(16px,1.8vw,21px);">Doyle Yager</div>
+            <div style="font-size:11px; color:var(--accentLt);">CEO, InterNET Services</div>
+          </div>
+          <div>
+            <div style="font-family:Georgia,serif; font-style:italic; color:var(--bg); font-size:clamp(16px,1.8vw,21px);">Steve Yager</div>
+            <div style="font-size:11px; color:var(--accentLt);">Vice President</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 9: THREE BROTHERS ════ -->
+<section class="scene" data-dur="13">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Neste generasjon</div>
+    </div>
+    <h2 class="serif title-l">Jeff, Doyle og Steve Yager</h2>
+    <div class="body soft italic">
+      Etter at Dexter gikk bort i 2019, drives familieforretningen videre av de tre brødrene — partnere i organisasjonen i over 40 år. Fjerde generasjon er allerede på vei inn.
+    </div>
+    <div class="cards c3" style="margin-top:0.5em;">
+      <div class="bio-card">
+        <div class="top">
+          <div class="name">Jeff Yager</div>
+          <div class="role">President</div>
+        </div>
+        <div class="body-txt">Jobber tett med IBOer, generelt ansvar for ledelse og økonomi. Reiser internasjonalt for å bygge relasjoner. Sitter også som styremedlem ved et stort universitet i Virginia.</div>
+        <div class="quote">Vi blender virkelig godt sammen.</div>
+      </div>
+      <div class="bio-card">
+        <div class="top">
+          <div class="name">Doyle Yager</div>
+          <div class="role">CEO · IBO i 42+ år</div>
+        </div>
+        <div class="body-txt">Sitter i IBOAI Board og jobber direkte med Amway Corporation. Forfatter, sammen med Dexter, av The Business Handbook. Kreativ problemløser og lagspillende styremedlem.</div>
+        <div class="quote">Du kan ikke alltid styre omstendighetene, men du kan alltid styre holdningen din.</div>
+      </div>
+      <div class="bio-card">
+        <div class="top">
+          <div class="name">Steve Yager</div>
+          <div class="role">Vice President</div>
+        </div>
+        <div class="body-txt">Vokste inn i forretningen sammen med brødrene fra ung alder. Aktiv i opplæring, eventer og daglig drift. Verdier som hardt arbeid og respekt går igjen i hans budskap.</div>
+        <div class="quote">Det viktigste foreldrene våre ga oss var et sett med prinsipper å leve etter.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 10: LEGACY ════ -->
+<section class="scene" data-dur="11">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Arven</div>
+    </div>
+    <h2 class="serif title-l">Hvorfor det betyr noe — også for oss</h2>
+    <div class="split uneven">
+      <div style="display:flex; flex-direction:column; gap:0.8em;">
+        <div class="card accent-top">
+          <div class="head">En arv bygget på prinsipper</div>
+          <div class="desc">Drøm, plan, hardt arbeid og holdning — en oppskrift som har overlevd 60+ år og 40+ land.</div>
+        </div>
+        <div class="card accent-top">
+          <div class="head">Mennesker, ikke produkter</div>
+          <div class="desc">«We build relationships — and people don't normally quit on people who love them.» Relasjonen er fundamentet.</div>
+        </div>
+        <div class="card accent-top">
+          <div class="head">Bransjens høyeste anerkjennelse</div>
+          <div class="desc">Innført postumt i Direct Selling Hall of Fame i 2025 — for å ha formet hvordan moderne nettverksmarkedsføring drives.</div>
+        </div>
+        <div class="card accent-top">
+          <div class="head">Et levende system</div>
+          <div class="desc">Yager-systemet er ikke historie — det driftes daglig og videreutvikles for nye generasjoner.</div>
+        </div>
+      </div>
+      <div class="feature" style="opacity:0; animation:cardIn 0.7s 0.5s ease forwards;">
+        <div style="font-size:42px; color:var(--accent); line-height:1; margin-bottom:0.4em;">"</div>
+        <div class="bigQ">A dream unrealized is a dream imprisoned by your greatest enemy: fear of failure.</div>
+        <div style="margin-top:1.2em; height:1px; width:60px; background:var(--gold);"></div>
+        <div class="qSrc">Dexter Yager · 1939–2019</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 11: REFLECTION ════ -->
+<section class="scene" data-dur="14">
+  <div class="scene-inner">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">Til ettertanke</div>
+    </div>
+    <h2 class="serif title-l">En menneskerettet forretning</h2>
+
+    <div style="margin-top: 0.5em; display: flex; flex-direction: column; gap: 1.1em; max-width: 920px;">
+      <p class="body" style="font-size: clamp(15px, 1.7vw, 19px); line-height: 1.65;">
+        Det høres enkelt ut. Det <em>er</em> det også. Men enkelt er ikke det samme som uten arbeid.
+      </p>
+      <p class="body" style="font-size: clamp(15px, 1.7vw, 19px); line-height: 1.65;">
+        Ingenting her kommer gratis. Det krever at du først bygger deg selv — fordi du kan ikke gi andre noe du ikke selv har. Karakter, kunnskap, utholdenhet, troverdighet.
+      </p>
+      <p class="body" style="font-size: clamp(15px, 1.7vw, 19px); line-height: 1.65; color: var(--accent); font-style: italic;">
+        Dette er ikke en produktforretning. Det er en menneskerettet forretning. Og råvaren er ekte interesse for andres suksess.
+      </p>
+    </div>
+
+    <div style="margin-top: 1.4em; padding-top: 1em; border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 14px; opacity: 0; animation: textIn 0.6s 1.2s ease forwards;">
+      <div style="width: 28px; height: 1.5px; background: var(--gold);"></div>
+      <div style="font-family: Georgia, serif; font-style: italic; color: var(--gold); font-size: clamp(14px, 1.5vw, 17px);">
+        Bygg deg selv — så kan du bygge andre.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ SCENE 12: CLOSING ════ -->
+<section class="scene dark" data-dur="8">
+  <div class="scene-inner" style="align-items:flex-start;">
+    <div class="eyebrow-row">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow">AVSLUTNING</div>
+    </div>
+    <h2 class="serif" style="font-size:clamp(40px,7vw,80px); font-style:italic; line-height:1.05; color:var(--bg); opacity:0; animation:titleIn 1s 0.4s ease forwards;">
+      Et system bygget på drøm,<br>relasjoner og duplikasjon.
+    </h2>
+    <div class="divider" style="background:var(--gold);"></div>
+    <div class="subtitle" style="font-size:clamp(16px,1.8vw,22px);">Spørsmål, refleksjoner eller en prat om systemet?</div>
+    
+  </div>
+</section>
+
+</div>
+
+<!-- ════ CONTROLS ════ -->
+<div id="controls">
+  <span id="counter">1 / 13</span>
+  <div id="timering">
+    <svg width="16" height="16"><circle class="bg" cx="8" cy="8" r="6.5"/><circle class="fg" cx="8" cy="8" r="6.5" stroke-dasharray="40.8" stroke-dashoffset="0"/></svg>
+  </div>
+  <div id="playPause">⏸</div>
+  <div id="dots"></div>
+</div>
+
+<script>
+const scenes = Array.from(document.querySelectorAll('.scene'));
+const dotsBox = document.getElementById('dots');
+const counter = document.getElementById('counter');
+const playBtn = document.getElementById('playPause');
+const ringFg  = document.querySelector('#timering .fg');
+const progBar = document.getElementById('progress-bar');
+const C = 2 * Math.PI * 6.5;
+ringFg.style.strokeDasharray = C;
+
+// build dots
+scenes.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  d.addEventListener('click', e => { e.stopPropagation(); goTo(i); lastTick=null; });
+  dotsBox.appendChild(d);
+});
+const dots = Array.from(document.querySelectorAll('.dot'));
+
+let cur = 0;
+let playing = true;
+let lastTick = null;
+let elapsed = 0;
+
+function goTo(n) {
+  if (n < 0) n = 0;
+  if (n >= scenes.length) n = scenes.length - 1;
+
+  scenes[cur].classList.remove('active');
+  // re-trigger animations
+  setTimeout(() => {
+    // clone-replace to restart CSS animations
+    const el = scenes[n];
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    scenes[n] = fresh;
+    fresh.classList.add('active');
+  }, 30);
+
+  cur = n;
+  dots.forEach((d, i) => d.classList.toggle('active', i === cur));
+  counter.textContent = `${cur + 1} / ${scenes.length}`;
+  elapsed = 0;
+  updateProgress();
+}
+
+function getDur() {
+  return parseFloat(scenes[cur].dataset.dur || 8) * 1000;
+}
+
+function updateProgress() {
+  const d = getDur();
+  const pct = Math.min(elapsed / d, 1);
+  ringFg.style.strokeDashoffset = C * (1 - pct);
+  progBar.style.width = ((cur + pct) / scenes.length * 100) + '%';
+}
+
+function tick(t) {
+  if (!playing) { lastTick = null; requestAnimationFrame(tick); return; }
+  if (lastTick == null) lastTick = t;
+  elapsed += (t - lastTick);
+  lastTick = t;
+  updateProgress();
+  if (elapsed >= getDur()) {
+    if (cur < scenes.length - 1) {
+      goTo(cur + 1);
+    } else {
+      playing = false;
+      playBtn.textContent = '▶';
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+playBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  playing = !playing;
+  playBtn.textContent = playing ? '⏸' : '▶';
+  lastTick = null;
+});
+
+// keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(cur+1); lastTick=null; }
+  if (e.key === 'ArrowLeft')                   { goTo(cur-1); lastTick=null; }
+  if (e.key === 'p' || e.key === 'P')          { playing = !playing; playBtn.textContent = playing ? '⏸' : '▶'; lastTick=null; }
+});
+
+// click anywhere to advance (except controls)
+document.getElementById('stage').addEventListener('click', e => {
+  if (e.target.closest('#controls')) return;
+  goTo(cur + 1);
+  lastTick = null;
+});
+
+// init
+dots[0].classList.add('active');
+counter.textContent = `1 / ${scenes.length}`;
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
