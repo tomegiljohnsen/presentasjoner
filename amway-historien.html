@@ -1081,7 +1081,7 @@ html, body {
 </section>
 
 <!-- ════ SCENE 14: CLOSING ════ -->
-<section class="scene dark" data-dur="9">
+<section class="scene dark" data-dur="10">
   <div class="scene-inner" style="align-items:flex-start;">
     <div class="eyebrow-row">
       <div class="eyebrow-bar"></div>
@@ -1093,11 +1093,17 @@ html, body {
     <div class="divider"></div>
     <div class="subtitle" style="font-size:clamp(16px,1.8vw,22px);">Spørsmål, refleksjoner eller en prat om selskapet?</div>
 
-    <a href="https://www.amway.no" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:10px; margin-top:1.5em; padding:14px 22px; background:var(--gold); color:var(--ink); text-decoration:none; font-size:14px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px; opacity:0; animation:textIn 0.6s 1s ease forwards; transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="event.stopPropagation();">
-      Besøk www.amway.no →
-    </a>
-
-    
+    <div style="margin-top: 1.6em; display:flex; flex-wrap:wrap; gap: 14px; opacity:0; animation: textIn 0.7s 1s ease forwards;">
+      <a href="yager.html" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:10px; padding:14px 22px; background:var(--gold); color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px; transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        Se også Yager-systemet →
+      </a>
+      <a href="https://www.amway.no" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:10px; padding:14px 22px; background:transparent; color:var(--accentLt); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border:1px solid rgba(201,221,214,0.3); border-radius:2px; transition: border-color 0.15s, color 0.15s;" onmouseover="this.style.borderColor='var(--gold)'; this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,221,214,0.3)'; this.style.color='var(--accentLt)'">
+        Besøk www.amway.no →
+      </a>
+      <a href="index.html" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:10px; padding:14px 22px; background:transparent; color:var(--accentLt); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border:1px solid rgba(201,221,214,0.3); border-radius:2px; transition: border-color 0.15s, color 0.15s;" onmouseover="this.style.borderColor='var(--gold)'; this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,221,214,0.3)'; this.style.color='var(--accentLt)'">
+        Tilbake til forsiden
+      </a>
+    </div>
   </div>
 </section>
 
@@ -1184,6 +1190,8 @@ document.addEventListener('keydown', e => {
 });
 document.getElementById('stage').addEventListener('click', e => {
   if (e.target.closest('#controls')) return;
+  if (e.target.closest('a')) return;
+  if (cur >= scenes.length - 1) return;
   goTo(cur + 1);
   lastTick = null;
 });

@@ -1057,7 +1057,7 @@ html, body {
 </section>
 
 <!-- ════ SCENE 12: CLOSING ════ -->
-<section class="scene dark" data-dur="8">
+<section class="scene dark" data-dur="10">
   <div class="scene-inner" style="align-items:flex-start;">
     <div class="eyebrow-row">
       <div class="eyebrow-bar"></div>
@@ -1068,7 +1068,15 @@ html, body {
     </h2>
     <div class="divider" style="background:var(--gold);"></div>
     <div class="subtitle" style="font-size:clamp(16px,1.8vw,22px);">Spørsmål, refleksjoner eller en prat om systemet?</div>
-    
+
+    <div style="margin-top: 1.8em; display:flex; flex-wrap:wrap; gap: 14px; opacity:0; animation: textIn 0.7s 1.2s ease forwards;">
+      <a href="amway.html" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:10px; padding:14px 22px; background:var(--gold); color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border-radius:2px; transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        Se også Amway-historien →
+      </a>
+      <a href="index.html" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:10px; padding:14px 22px; background:transparent; color:var(--accentLt); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; border:1px solid rgba(201,221,214,0.3); border-radius:2px; transition: border-color 0.15s, color 0.15s;" onmouseover="this.style.borderColor='var(--gold)'; this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,221,214,0.3)'; this.style.color='var(--accentLt)'">
+        Tilbake til forsiden
+      </a>
+    </div>
   </div>
 </section>
 
@@ -1172,9 +1180,11 @@ document.addEventListener('keydown', e => {
   if (e.key === 'p' || e.key === 'P')          { playing = !playing; playBtn.textContent = playing ? '⏸' : '▶'; lastTick=null; }
 });
 
-// click anywhere to advance (except controls)
+// click anywhere to advance (except controls and on the last scene)
 document.getElementById('stage').addEventListener('click', e => {
   if (e.target.closest('#controls')) return;
+  if (e.target.closest('a')) return;
+  if (cur >= scenes.length - 1) return;
   goTo(cur + 1);
   lastTick = null;
 });
