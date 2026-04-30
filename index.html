@@ -682,6 +682,57 @@ html, body {
   100% { opacity: 0; }
 }
 
+/* Install/fullscreen prompt — shows once on mobile if not already in standalone */
+#installPrompt {
+  position: fixed;
+  bottom: calc(80px + var(--safeB));
+  left: 16px; right: 16px;
+  z-index: 300;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 14px 16px;
+  border-radius: 8px;
+  border-left: 4px solid var(--gold);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  display: none;
+  font-size: 13px;
+  line-height: 1.5;
+  animation: slideInBottom 0.5s ease;
+}
+#installPrompt.show { display: block; }
+#installPrompt .ttl {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; color: var(--gold);
+  margin-bottom: 6px;
+}
+#installPrompt .body {
+  color: var(--accentLt);
+  margin-bottom: 10px;
+}
+#installPrompt .row {
+  display: flex; gap: 8px;
+}
+#installPrompt button {
+  flex: 1;
+  background: var(--gold); color: var(--ink);
+  border: none; padding: 10px;
+  font-family: inherit; font-size: 12px;
+  font-weight: 600; letter-spacing: 0.05em;
+  border-radius: 4px; cursor: pointer;
+}
+#installPrompt button.sec {
+  background: transparent;
+  color: var(--accentLt);
+  border: 1px solid rgba(201,221,214,0.3);
+}
+@keyframes slideInBottom {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@media (display-mode: standalone) {
+  #installPrompt { display: none !important; }
+}
+
 * { touch-action: manipulation; }
 
 /* Desktop adjustments */
@@ -717,6 +768,45 @@ html, body {
 <div id="topbar"></div>
 <div id="progress-wrap"><div id="progress-bar"></div></div>
 <div id="swipeHint">Sveip eller tap for å gå videre</div>
+
+<div id="installPrompt">
+  <div class="ttl">FOR BEST OPPLEVELSE</div>
+  <div class="body">For ekte fullskjerm uten verktøylinjer: Trykk Del-knappen og velg <b>"Legg til på Hjem-skjerm"</b>.</div>
+  <div class="row">
+    <button id="installShow">Vis meg hvordan</button>
+    <button id="installClose" class="sec">Lukk</button>
+  </div>
+</div>
+
+<div id="installGuide" style="display:none; position:fixed; inset:0; z-index:400; background:rgba(14,26,29,0.95); padding:20px; overflow-y:auto;">
+  <div style="max-width:380px; margin:0 auto; padding-top:30px;">
+    <div style="font-size:11px; font-weight:700; letter-spacing:0.25em; color:var(--gold); margin-bottom:10px;">SLIK GJØR DU</div>
+    <h3 style="font-family:Georgia,serif; font-style:italic; color:var(--bg); font-size:26px; line-height:1.1; margin-bottom:18px;">Få ekte fullskjerm i 3 trinn</h3>
+
+    <div style="background:rgba(255,255,255,0.05); padding:14px 16px; margin-bottom:10px; border-radius:6px;">
+      <div style="color:var(--gold); font-size:12px; font-weight:700; margin-bottom:4px;">Trinn 1</div>
+      <div style="color:var(--bg); font-size:14px;">Trykk Del-knappen i nettleseren</div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.05); padding:14px 16px; margin-bottom:10px; border-radius:6px;">
+      <div style="color:var(--gold); font-size:12px; font-weight:700; margin-bottom:4px;">Trinn 2</div>
+      <div style="color:var(--bg); font-size:14px;">Bla nedover og velg<br><b style="color:var(--gold);">"Legg til på Hjem-skjerm"</b></div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.05); padding:14px 16px; margin-bottom:18px; border-radius:6px;">
+      <div style="color:var(--gold); font-size:12px; font-weight:700; margin-bottom:4px;">Trinn 3</div>
+      <div style="color:var(--bg); font-size:14px;">Du får et nytt ikon på Hjem-skjermen. Åpne det — alltid i fullskjerm uten verktøylinjer.</div>
+    </div>
+
+    <div style="background:rgba(176,138,62,0.15); padding:12px 14px; margin-bottom:18px; border-radius:6px; border-left:3px solid var(--gold);">
+      <div style="color:var(--accentLt); font-size:13px; line-height:1.5;">
+        <b style="color:var(--gold);">Tips:</b> Funker best i <b>Safari</b>. I Chrome må du først åpne lenken i Safari (kompass-ikon nederst i Chrome).
+      </div>
+    </div>
+
+    <button id="guideClose" style="width:100%; background:var(--gold); color:var(--ink); border:none; padding:14px; font-family:inherit; font-size:13px; font-weight:600; letter-spacing:0.1em; border-radius:4px; cursor:pointer;">Lukk og fortsett</button>
+  </div>
+</div>
 
 <div id="stage">
 
@@ -1853,6 +1943,39 @@ document.addEventListener('click', e => {
 }, true);
 
 requestAnimationFrame(tick);
+
+// Install prompt — show once on mobile if not already in standalone
+(function() {
+  const isMobile = window.matchMedia('(max-width: 768px)').matches ||
+                   (('ontouchstart' in window) && window.innerWidth < 900);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem('installPromptDismissed') === '1'; } catch(_) {}
+
+  const prompt = document.getElementById('installPrompt');
+  const guide = document.getElementById('installGuide');
+
+  if (isMobile && !isStandalone && !dismissed) {
+    setTimeout(() => prompt.classList.add('show'), 2500);
+  }
+
+  document.getElementById('installShow').addEventListener('click', e => {
+    e.stopPropagation();
+    prompt.classList.remove('show');
+    guide.style.display = 'block';
+  });
+  document.getElementById('installClose').addEventListener('click', e => {
+    e.stopPropagation();
+    prompt.classList.remove('show');
+    try { localStorage.setItem('installPromptDismissed', '1'); } catch(_) {}
+  });
+  document.getElementById('guideClose').addEventListener('click', e => {
+    e.stopPropagation();
+    guide.style.display = 'none';
+    try { localStorage.setItem('installPromptDismissed', '1'); } catch(_) {}
+  });
+})();
 
 // Fullskjerm ved åpning (samme metode som planvisningen)
 (function tryFS(){
